@@ -112,11 +112,14 @@ def BuildIcuData(iana_data_tar_file):
   # Create ICU system image files.
   icuutil.MakeAndCopyIcuDataFiles(icu_build_dir)
 
-  icu_overlay_dir = '%s/icu_overlay' % timezone_output_data_dir
-
   # Create the ICU overlay time zone file.
+  icu_overlay_dir = '%s/icu_overlay' % timezone_output_data_dir
   icu_overlay_dat_file = '%s/icu_tzdata.dat' % icu_overlay_dir
   icuutil.MakeAndCopyOverlayTzIcuData(icu_build_dir, icu_overlay_dat_file)
+
+  # There are files in ICU which generation depends on ICU itself,
+  # so multiple builds might be needed.
+  icuutil.GenerateIcuDataFiles()
 
   # Copy ICU license file(s)
   icuutil.CopyLicenseFiles(icu_overlay_dir)
@@ -170,7 +173,7 @@ def BuildTzdata(zic_binary_file, extracted_iana_data_dir, iana_data_version):
   print('Calling zic...')
   zic_output_dir = '%s/data' % tmp_dir
   os.mkdir(zic_output_dir)
-  zic_cmd = [zic_binary_file, '-d', zic_output_dir, zic_input_file]
+  zic_cmd = [zic_binary_file, '-b', 'fat', '-d', zic_output_dir, zic_input_file]
   subprocess.check_call(zic_cmd)
 
   # ZoneCompactor
